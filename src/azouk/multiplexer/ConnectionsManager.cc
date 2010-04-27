@@ -19,9 +19,8 @@
 //      Piotr Findeisen <piotr.findeisen at gmail.com>
 //
 
-
+#include "config.h"
 #include "build/multiplexer/multiplexer.constants.h" /* generated */
-
 #include "ConnectionsManager.h"
 
 namespace multiplexer {

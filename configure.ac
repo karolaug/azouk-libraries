@@ -25,6 +25,11 @@ AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AC_LIBTOOL_WIN32_DLL
 
+if test -z "$CXX_FOR_BUILD"; then
+   CXX_FOR_BUILD=$CXX
+fi
+AC_SUBST(CXX_FOR_BUILD)
+
 gl_INIT
 
 # look for protoc, the ProtoBuf compiler

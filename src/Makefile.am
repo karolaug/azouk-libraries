@@ -1,4 +1,4 @@
-bin_PROGRAMS = mxcontrol server generate_constants
+bin_PROGRAMS = mxcontrol server
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) -I$(top_builddir)
 AM_CPPFLAGS += -I$(top_builddir)/lib -I$(top_srcdir)/lib
 
@@ -23,9 +23,7 @@ AM_LDFLAGS = $(boost_ldflags)
 LDADD = $(top_builddir)/lib/libgnu.la $(boost_libs) \
         $(GETHOSTNAME_LIB) $(LIBSOCKET) # gethostname replacement from gnulib
 
-common_sources =    azlib/logging/Logging.pb.cc \
-                    azlib/logging/Logging.pb.h \
-                    azlib/signals.cc azlib/signals.h \
+common_sources =    azlib/signals.cc azlib/signals.h \
                     azlib/random.cc azlib/random.h \
                     azlib/logging.cc azlib/logging.h \
                     azlib/util/Assert.cc azlib/util/Assert.h \
@@ -34,7 +32,9 @@ common_sources =    azlib/logging/Logging.pb.cc \
                     azouk/xrelease.cc azouk/xrelease.h
 
 multiplexer_sources = multiplexer/Multiplexer.pb.cc \
-                    multiplexer/Multiplexer.pb.h
+                    multiplexer/Multiplexer.pb.h \
+                    azlib/logging/Logging.pb.cc \
+                    azlib/logging/Logging.pb.h
 
 mxcontrol_SOURCES = mxcontrol.cc $(common_sources) \
                     mxcontrol-commands/TasksHolder.cc \
@@ -61,21 +61,46 @@ mxcontrol_SOURCES = mxcontrol.cc $(common_sources) \
                     multiplexer/io/RawMessage.cc \
                     multiplexer/io/RawMessage.h \
                     multiplexer/backend/BaseMultiplexerServer.cc \
-                    multiplexer/backend/BaseMultiplexerServer.h
+                    multiplexer/backend/BaseMultiplexerServer.h \
+                    azouk/logging/type_id_constants.h
 
-server_SOURCES =    server.cc $(common_sources)
-
-generate_constants_SOURCES = generate_constants.cc $(common_sources) \
+server_SOURCES =    server.cc $(common_sources) \
                     $(multiplexer_sources)
 
+
+
 BUILT_SOURCES = azlib/logging/Logging.pb.cc azlib/logging/Logging.pb.h \
-                multiplexer/Multiplexer.pb.cc multiplexer/Multiplexer.pb.h
+                multiplexer/Multiplexer.pb.cc multiplexer/Multiplexer.pb.h \
+                multiplexer/multiplexer.constants.h \
+                azouk/logging/type_id_constants.h
 
 %.pb.h %.pb.cc: %.proto
 	$(PROTOC) $(PROTOCFLAGS) -I $(top_srcdir)/src --cpp_out=$(builddir) $<
 
+multiplexer/multiplexer.constants.h multiplexer/multiplexer.constants.py: \
+  multiplexer.rules $(GENERATE_CONSTANTS)
+	$(GENERATE_CONSTANTS) $< $@
+
+file_token = $(firstword $(shell echo $@ | sha1sum))
+azouk/logging/type_id_constants.h: logging.type_id.constants.txt
+	mkdir -p $(dir $@)
+	echo "#ifndef $(file_token)" > $@
+	echo "#define $(file_token)" >> $@
+	echo "namespace type_id_constants {" >> $@
+	awk '/^[^#]/ {print "\tstatic const unsigned int", $$0 ";" }' $< >> $@
+	echo "};" >> $@
+	echo "#endif" >> $@
 
 # version file generation
 version = unknown
 version_hash = $(shell echo -n "$(version)" | sha1sum - | cut -d' ' -f1)
 version_short_hash = $(shell echo $(version_hash) | cut --bytes=1-7)
+
+$(GENERATE_CONSTANTS): generate_constants.cc \
+       multiplexer/Multiplexer.pb.cc multiplexer/Multiplexer.pb.h \
+       azlib/logging/Logging.pb.cc azlib/logging/Logging.pb.h \
+       azlib/util/Assert.cc azlib/util/Assert.h \
+       azlib/util/Exception.cc azlib/util/Exception.h
+	c++ -I$(srcdir) -I$(builddir) -lprotobuf -lpthread $+ -o $@
+
+GENERATE_CONSTANTS = ./generate_constants

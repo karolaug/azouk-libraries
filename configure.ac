@@ -55,7 +55,10 @@ BOOST_SYSTEM
 BOOST_DATE_TIME
 
 AC_CHECK_LIB([pthread], [sem_open])
-AC_CHECK_LIB([protobuf], [main])
+#AC_CHECK_LIB([protobuf], [main])
+
+AX_CHECK_CXX_LIB([protobuf], [google/protobuf/text_format.h],
+	         [google::protobuf::TextFormat::Print])
 
 ## a hack for now
 ## Server.o:Server.cc:(.text$_ZN5boost4asio6detail23win_iocp_socket_serviceINS0_2ip3tcpEE16accept_operationINS0_12basic_socketIS4_NS0_21stream_socket_serviceIS4_EEEENS_3_bi6bind_tIvNS_4_mfi3mf2IvN11multiplexer6ServerENS_10shared_ptrINSF_10ConnectionISG_EEEERKNS_6system10error_codeEEENSB_5list3INSB_5valueIPSG_EENSR_ISK_EEPFNS_3argILi1EEEvEEEEEE18do_completion_implEPNS1_19win_iocp_io_service9operationEmj[boost::asio::detail::win_iocp_socket_service<boost::asio::ip::tcp>::accept_operation<boost::asio::basic_socket<boost::asio::ip::tcp, boost::asio::stream_socket_service<boost::asio::ip::tcp> >, boost::_bi::bind_t<void, boost::_mfi::mf2<void, multiplexer::Server, boost::shared_ptr<multiplexer::Connection<multiplexer::Server> >, boost::system::error_code const&>, boost::_bi::list3<boost::_bi::value<multiplexer::Server*>, boost::_bi::value<boost::shared_ptr<multiplexer::Connection<multiplexer::Server> > >, boost::arg<1> (*)()> > >::do_completion_impl(boost::asio::detail::win_iocp_io_service::operation*, unsigned long, unsigned int)]+0x44a): undefined reference to `_AcceptEx@32'
